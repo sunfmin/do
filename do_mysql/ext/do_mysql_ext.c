@@ -218,11 +218,17 @@ static VALUE parse_date_time(const char *date_time) {
 
   // TODO: Refactor the following few lines to do the calculation with the *seconds*
   // value instead of having to do the hour/minute math
-  int hour_offset = abs(timeinfo->tm_gmtoff) / 3600;
-  int minute_offset = abs(timeinfo->tm_gmtoff) % 3600 / 60;
+
+  #ifdef HAVE_ST_TM_GMTOFF
+    int gmtoff = timeinfo->tm_gmtoff;
+  #else
+    int gmtoff = timezone;
+  #endif
+  int hour_offset = abs(gmtoff) / 3600;
+  int minute_offset = abs(gmtoff) % 3600 / 60;
 
   // Modify the numerator so when we apply the timezone everything works out
-  if (timeinfo->tm_gmtoff < 0) {
+  if (gmtoff < 0) {
     // If the Timezone is behind UTC, we need to add the time offset
     num += (hour_offset * 1440) + (minute_offset * 24);
   } else {
@@ -246,7 +252,7 @@ static VALUE parse_date_time(const char *date_time) {
   ajd = rb_funcall(rb_cRational, rb_intern("new!"), 2, rb_ull2inum(num), rb_ull2inum(den));
 
   // Calculate the offset using the seconds from GMT
-  offset = seconds_to_offset(timeinfo->tm_gmtoff);
+  offset = seconds_to_offset(gmtoff);
 
   return rb_funcall(rb_cDateTime, ID_NEW_DATE, 3, ajd, offset, INT2NUM(2299161));
 }

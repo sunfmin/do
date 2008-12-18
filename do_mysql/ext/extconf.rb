@@ -62,6 +62,8 @@ unless RUBY_PLATFORM =~ /mswin|mingw/
   have_func 'mysql_ssl_set'
 end
 
+have_struct_member 'tm','tm_gmtoff'
+
 $CFLAGS << ' -Wall ' unless RUBY_PLATFORM =~ /mswin/
 
 if RUBY_VERSION < '1.8.6'
